@@ -146,21 +146,10 @@ table.tbl td:first-child{color:var(--sub)}
 #progress{position:fixed;left:0;bottom:var(--nav-h);height:3px;background:#FFFFFF;width:0;z-index:201;transition:width .2s}
 @media (max-width:760px){
   #nav .hide-sm,#modeBadge,#connBadge{display:none!important}
-  #nav #lockBtn,#nav #pdfBtn,#nav #focusBtn{font-size:0;padding:0 8px}
+  #nav #lockBtn,#nav #pdfBtn{font-size:0;padding:0 8px}
   #lockBtn::after{content:'🔒';font-size:16px}
   #pdfBtn::after{content:'PDF';font-size:12px}
-  #focusBtn::after{content:'🤫';font-size:16px}
 }
-
-/* 집중 안내: 현재 슬라이드 위 전용 오버레이 */
-.focus-overlay{position:absolute;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:3cqi;
-  background:rgba(0,0,0,.78);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
-.focus-overlay.show{opacity:1;visibility:visible;pointer-events:auto}
-.focus-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4cqi;text-align:center;
-  color:#FFFFFF;transform:translateY(1.2cqi) scale(.96);opacity:0;transition:transform .24s ease,opacity .24s ease}
-.focus-overlay.show .focus-card{transform:translateY(0) scale(1);opacity:1}
-.focus-card img{display:block;width:clamp(110px,34cqi,400px);max-height:60%;object-fit:contain}
-.focus-card p{font-size:clamp(14px,2.5cqi,30px);font-weight:900;line-height:1.4;text-wrap:balance;text-shadow:0 2px 12px rgba(0,0,0,.45)}
 
 /* 전체보기: 실제 축소판 */
 .grid-overlay{position:fixed;inset:0;z-index:500;background:rgba(10,10,10,.97);display:none;overflow:auto;padding:22px 22px 40px}
@@ -193,13 +182,13 @@ table.tbl td:first-child{color:var(--sub)}
 .login-box button.primary{background:#111111;color:#FFFFFF;border-color:#111111}
 .login-box .err{color:#B71C1C;font-size:13px;font-weight:700;min-height:1.2em}
 
-@media (prefers-reduced-motion:reduce){ #progress,.focus-overlay,.focus-card{transition:none} }
+@media (prefers-reduced-motion:reduce){ #progress{transition:none} }
 
 /* PDF: 16:9 페이지 1장 = 슬라이드 1장 */
 @page{size:13.333in 7.5in;margin:0}
 @media print{
   html, body{overflow:visible!important;height:auto!important;background:#FFFFFF}
-  #nav, #progress, .grid-overlay, .focus-overlay{display:none!important}
+  #nav, #progress, .grid-overlay{display:none!important}
   #stage{position:static!important;transform:none!important;width:13.333in!important;aspect-ratio:auto!important;overflow:visible!important}
   #stage > .slide{position:relative!important;display:flex!important;width:13.333in;height:7.5in;
     break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -332,10 +321,6 @@ table.tbl td:first-child{color:var(--sub)}
 <!-- ===== 36. 마침 ===== -->
 <section class="slide title-slide" aria-label="36. 마침"><div class="slide-content"><div class="kicker">코덱스 첫걸음 · 100분</div><h1>수고하셨습니다</h1><p class="lede">다음 행동 1가지 · 내 소개 페이지 다시 열고 작은 수정 1번 요청하기</p><div class="meta-row"><span>작게 요청하기</span><span>직접 확인하기</span><span>원본 보관하기</span></div></div></section>
 
-<div class="focus-overlay" id="focusOverlay" aria-hidden="true" role="status" aria-live="assertive">
-  <div class="focus-card"><img src="assets/pinky-shh.png" alt="입 앞에 손가락을 세운 핑키 캐릭터"><p>쉿! 잠깐, 선생님 설명에 집중해 주세요.</p></div>
-</div>
-
 </main>
 
 <div id="progress" aria-hidden="true"></div>
@@ -350,7 +335,6 @@ table.tbl td:first-child{color:var(--sub)}
   <span class="hint hide-sm">← → 이동 · G 전체보기 · P PDF</span>
   <button type="button" id="lockBtn" hidden aria-pressed="false">🔒 잠금</button>
   <button type="button" id="pdfBtn" hidden aria-pressed="true">PDF 허용</button>
-  <button type="button" id="focusBtn" hidden aria-pressed="false" aria-label="집중 안내 켜기">🤫 집중</button>
   <button type="button" id="gridBtn" aria-haspopup="dialog" aria-controls="gridOverlay">▦ 전체 보기</button>
   <button type="button" id="printBtn" class="hide-sm">⎙ PDF 저장</button>
 </nav>
@@ -400,7 +384,6 @@ table.tbl td:first-child{color:var(--sub)}
   var navNext = document.getElementById('navNext');
   var gridOverlay = document.getElementById('gridOverlay');
   var gridList = document.getElementById('gridList');
-  var focusOverlay = document.getElementById('focusOverlay');
   var minis = [];
   var lastFocus = null;
   var localNavGuard = null;
@@ -439,11 +422,6 @@ table.tbl td:first-child{color:var(--sub)}
     var hint = document.querySelector('#nav .hint');
     if (hint) hint.textContent = pdfAllowed ? '← → 이동 · G 전체보기 · P PDF' : '← → 이동 · G 전체보기';
   }
-  function setFocusOverlay(on){
-    var open = !!on;
-    focusOverlay.classList.toggle('show', open);
-    focusOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-  }
 
   function scaleMinis(){
     minis.forEach(function(m){ m.firstChild.style.transform = 'scale(' + (m.clientWidth / 960) + ')'; });
@@ -481,7 +459,7 @@ table.tbl td:first-child{color:var(--sub)}
 
   /* 무대 클릭: 오른쪽 절반 다음 · 왼쪽 절반 이전 (버튼·링크·프롬프트 카드 제외) */
   stage.addEventListener('click', function(e){
-    if (e.target.closest('button, a, .prompt-card, .focus-overlay')) return;
+    if (e.target.closest('button, a, .prompt-card')) return;
     var rect = stage.getBoundingClientRect();
     if (e.clientX - rect.left > rect.width / 2) navigate(idx + 1); else navigate(idx - 1);
   });
@@ -614,7 +592,6 @@ table.tbl td:first-child{color:var(--sub)}
     setNavigationGuard:function(fn){ localNavGuard = fn || null; refreshNav(); },
     setLocalSlideHandler:function(fn){ localSlideHandler = fn || null; },
     setPdfAllowed:setPdfAllowed,
-    setFocusOverlay:setFocusOverlay,
     refreshNav:refreshNav
   };
   show(idx);
@@ -630,7 +607,6 @@ table.tbl td:first-child{color:var(--sub)}
   let sync = null;
   let locked = false;
   let pdfOk = true;
-  let focusOn = false;
   let isAdmin = false;
   let lastState = null;
   let online = false;
@@ -649,14 +625,10 @@ table.tbl td:first-child{color:var(--sub)}
   }
   function renderAdminControls(){
     $('lockBtn').hidden = $('pdfBtn').hidden = !isAdmin;
-    $('focusBtn').hidden = !(isAdmin || (WANT_ADMIN && !sync));
     $('lockBtn').textContent = locked ? '🔒 잠금 중' : '🔓 자유 이동';
     $('lockBtn').setAttribute('aria-pressed', String(locked));
     $('pdfBtn').textContent = pdfOk ? 'PDF 허용 중' : 'PDF 막힘';
     $('pdfBtn').setAttribute('aria-pressed', String(pdfOk));
-    $('focusBtn').textContent = focusOn ? '🤫 집중 해제' : '🤫 집중';
-    $('focusBtn').setAttribute('aria-pressed', String(focusOn));
-    $('focusBtn').setAttribute('aria-label', focusOn ? '집중 안내 끄기' : '집중 안내 켜기');
   }
   function renderConnection(){
     if (!sync) { $('connBadge').hidden = true; return; }
@@ -672,37 +644,15 @@ table.tbl td:first-child{color:var(--sub)}
     sync = null;
     locked = false;
     pdfOk = true;
-    focusOn = false;
     isAdmin = false;
     api.setNavigationGuard(null);
     api.setLocalSlideHandler(null);
     api.setPdfAllowed(true);
-    api.setFocusOverlay(false);
     $('login').hidden = true;
     renderAdminControls();
     renderConnection();
     setMode(label || '자유 열람', false);
   }
-
-  function requestFocus(on){
-    if (sync && isAdmin) {
-      sync.setFocus(!!on).catch(() => { $('connBadge').hidden = false; $('connBadge').textContent = '집중 상태 저장 실패'; });
-      return;
-    }
-    if (WANT_ADMIN && !sync) {
-      focusOn = !!on;
-      api.setFocusOverlay(focusOn);
-      renderAdminControls();
-    }
-  }
-
-  $('focusBtn').addEventListener('click', () => requestFocus(!focusOn));
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && WANT_ADMIN && focusOn && (isAdmin || !sync)) {
-      e.preventDefault();
-      requestFocus(false);
-    }
-  });
 
   useFreeMode('자유 열람');
   if (!configured(window.FIREBASE_CONFIG)) return;
@@ -723,9 +673,7 @@ table.tbl td:first-child{color:var(--sub)}
       lastState = state;
       locked = !!state.locked;
       pdfOk = state.pdf !== false;
-      focusOn = !!state.focus;
       api.setPdfAllowed(pdfOk);
-      api.setFocusOverlay(focusOn);
       if (!isAdmin && locked) api.showRemote(state.slide | 0);
       else if (isAdmin) api.showRemote(state.slide | 0);
       setMode(isAdmin ? '강사 제어' : (locked ? '발표자를 따라가는 중' : '자유 이동'), !isAdmin && locked);
