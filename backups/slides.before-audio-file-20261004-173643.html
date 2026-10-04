@@ -335,7 +335,6 @@ table.tbl td:first-child{color:var(--sub)}
 <div class="focus-overlay" id="focusOverlay" aria-hidden="true" role="status" aria-live="assertive">
   <div class="focus-card"><img src="assets/pinky-shh.png" alt="입 앞에 손가락을 세운 핑키 캐릭터"><p>쉿! 잠깐, 선생님 설명에 집중해 주세요.</p></div>
 </div>
-<audio id="focusSound" preload="auto" src="assets/focus-guide-custom.wav"></audio>
 
 </main>
 
@@ -402,7 +401,6 @@ table.tbl td:first-child{color:var(--sub)}
   var gridOverlay = document.getElementById('gridOverlay');
   var gridList = document.getElementById('gridList');
   var focusOverlay = document.getElementById('focusOverlay');
-  var focusSound = document.getElementById('focusSound');
   var minis = [];
   var lastFocus = null;
   var localNavGuard = null;
@@ -445,16 +443,19 @@ table.tbl td:first-child{color:var(--sub)}
     var open = !!on;
     focusOverlay.classList.toggle('show', open);
     focusOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-    if (!open) {
-      focusSound.pause();
-      focusSound.currentTime = 0;
-    }
+    if (!open && 'speechSynthesis' in window) window.speechSynthesis.cancel();
   }
   function speakFocusGuide(){
-    focusSound.pause();
-    focusSound.currentTime = 0;
-    var playback = focusSound.play();
-    if (playback && playback.catch) playback.catch(function(){ /* 브라우저 자동 재생 차단 시 화면 안내만 유지 */ });
+    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+    window.speechSynthesis.cancel();
+    var message = new SpeechSynthesisUtterance('쉿! 조용히 해 주세요. 그리고 집중!');
+    message.lang = 'ko-KR';
+    message.rate = 0.88;
+    message.pitch = 1;
+    message.volume = 1;
+    var koreanVoice = window.speechSynthesis.getVoices().find(function(voice){ return /^ko(-|_)/i.test(voice.lang); });
+    if (koreanVoice) message.voice = koreanVoice;
+    window.speechSynthesis.speak(message);
   }
 
   function scaleMinis(){
