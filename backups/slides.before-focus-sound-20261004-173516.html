@@ -443,19 +443,6 @@ table.tbl td:first-child{color:var(--sub)}
     var open = !!on;
     focusOverlay.classList.toggle('show', open);
     focusOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-    if (!open && 'speechSynthesis' in window) window.speechSynthesis.cancel();
-  }
-  function speakFocusGuide(){
-    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
-    window.speechSynthesis.cancel();
-    var message = new SpeechSynthesisUtterance('쉿! 조용히 해 주세요. 그리고 집중!');
-    message.lang = 'ko-KR';
-    message.rate = 0.88;
-    message.pitch = 1;
-    message.volume = 1;
-    var koreanVoice = window.speechSynthesis.getVoices().find(function(voice){ return /^ko(-|_)/i.test(voice.lang); });
-    if (koreanVoice) message.voice = koreanVoice;
-    window.speechSynthesis.speak(message);
   }
 
   function scaleMinis(){
@@ -628,7 +615,6 @@ table.tbl td:first-child{color:var(--sub)}
     setLocalSlideHandler:function(fn){ localSlideHandler = fn || null; },
     setPdfAllowed:setPdfAllowed,
     setFocusOverlay:setFocusOverlay,
-    speakFocusGuide:speakFocusGuide,
     refreshNav:refreshNav
   };
   show(idx);
@@ -704,10 +690,8 @@ table.tbl td:first-child{color:var(--sub)}
       return;
     }
     if (WANT_ADMIN && !sync) {
-      const wasFocusOn = focusOn;
       focusOn = !!on;
       api.setFocusOverlay(focusOn);
-      if (focusOn && !wasFocusOn) api.speakFocusGuide();
       renderAdminControls();
     }
   }
@@ -739,11 +723,9 @@ table.tbl td:first-child{color:var(--sub)}
       lastState = state;
       locked = !!state.locked;
       pdfOk = state.pdf !== false;
-      const wasFocusOn = focusOn;
       focusOn = !!state.focus;
       api.setPdfAllowed(pdfOk);
       api.setFocusOverlay(focusOn);
-      if (focusOn && !wasFocusOn) api.speakFocusGuide();
       if (!isAdmin && locked) api.showRemote(state.slide | 0);
       else if (isAdmin) api.showRemote(state.slide | 0);
       setMode(isAdmin ? '강사 제어' : (locked ? '발표자를 따라가는 중' : '자유 이동'), !isAdmin && locked);
